@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <!-- 用axios套件進行遠端資料串接:登入, 上傳... -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.24.0/axios.min.js"></script>
+</head>
+
+<body>
+    <div>
+        <input type="email" id="email">
+        <input type="password" id="password">
+        <button type="button" id="login">登入</button>
+    </div>
+
+    <div>
+        <button type="button" id="check">確認是否登入</button>
+        <button type="button" id="getProducts">取得後台的產品列表</button>
+        <button type="button" id="addProduct">新增一個產品</button>
+        <button type="button" id="delProduct">刪除一個產品</button>
+    </div>
+
+    <div>
+        <input type="file" class="form-control" id="file" placeholder="請輸入圖片連結" />
+    </div>
+
+    <script>
+        const url = 'https://ec-course-api.hexschool.io/';     //加入申請API的站點
+        const path = 'peijinhexhw';    //加入個人API Path
+
+        // #1 如何串接API資料
+
+        const emailInput = document.querySelector('#email');
+        const pwInput = document.querySelector('#password');
+        const loginBtn = document.querySelector('#login');
+        const checkBtn = document.querySelector('#check');
+        const getProductsBtn = document.querySelector('#getProducts');
+        const addProductBtn = document.querySelector('#addProduct');
+        const delProductBtn = document.querySelector('#delProduct');
+
+        loginBtn.addEventListener('click', login);  //login是回呼函式(callback), 當點擊發生時，要被觸發執行的函式名稱
+        function login() {
+            //取得input框的資料
+            const username = emailInput.value;
+            const password = pwInput.value;
+
+            //組成API文件的格式
+            const user = {
+                username,
+                password
+            }
+            //console.log(username,password)
+            // #2 發送API至遠端並登入 (並儲存Token)
+            axios.post(`${url}/v2/admin/signin`, user)  //post(路徑:站點+API, 參數)
+                .then((res) => {
+                    console.log(res);
+                    //取得token
+                    const { token, expired } = res.data;
+                    //console.log(token, expired);
+                    
+                    //儲存Token到cookie
+                    document.cookie = `hexToken=${token}; expired=${new Date(expired)};`;
+                })
+                .catch((error) => {
+                    console.dir(error);
+                })
+        }
+
+        //確認有沒正確登入
+        checkBtn.addEventListener('click', checkLogin);
+        function checkLogin() {
+            // #3 取得Token (Token僅需設定一次)
+            const token = document.cookie.replace(
+                /(?:(?:^|.*;\s*)hexToken\s*\=\s*([^;]*).*$)|^.*$/,"$1");
+            //console.log(token);
+            
+            // 取得Token後放到header, 跟data或其他內容一起發送請求
+            axios.defaults.headers.common['Authorization'] = token;
+            // #4 確認是否登入
+            axios.post(`${url}/v2/api/user/check`)
+                .then((res) => {
+                    console.log(res);
+                })
+                .catch((error) => {
+                    console.log(error);
+                })
+        }
+
+        //取得Token, 放到header這兩步驟放在外層, 才不用每次都先按確認登入才取得Token (因寫在checkLogin)
+        const token = document.cookie.replace(
+                /(?:(?:^|.*;\s*)hexToken\s*\=\s*([^;]*).*$)|^.*$/,"$1");
+        axios.defaults.headers.common['Authorization'] = token;
+
+        getProductsBtn.addEventListener('click', getProducts);
+        function getProducts() {
+            // #5 取得後台產品列表
+            axios.get(`${url}/v2/api/${path}/admin/products`)
+                .then((res) => {
+                    console.log(res);
+                })
+                .catch((error) => {
+                    console.log(error);
+                })
+        }
+
+        addProductBtn.addEventListener('click', addProduct);
+        function addProduct() {
+            const Product_1 = {
+                data: {
+                    title : '聖誕禮物公園滑雪場',
+                    category : '旭川',
+                    origin_price : 4200,
+                    price : 4200,
+                    unit : '¥',
+                    description : '夜景很漂亮的滑雪場',
+                    content : '室內休息區有很多免費置物櫃, 且休息區離纜車很近, 很方便。綠線一半有壓雪, 一半是粉雪, 玩得很開心。有魔毯, 適合第一次滑雪的人練習。整體氣份很好, 非常喜歡。 ',
+                    is_enabled : 1,
+                    imageUrl : 'https://storage.googleapis.com/vue-course-api.appspot.com/peijinhexhw/1769237461821.jpg',
+                    imagesUrl : [
+                    'https://storage.googleapis.com/vue-course-api.appspot.com/peijinhexhw/1769237127167.jpg',
+                    'https://storage.googleapis.com/vue-course-api.appspot.com/peijinhexhw/1769236985448.jpg',
+                    'https://storage.googleapis.com/vue-course-api.appspot.com/peijinhexhw/1769240934353.jpg'
+                    ]
+                }
+            }
+            const Product_2 = {
+                data: {
+                    title : 'Onze滑雪場',
+                    category : '小樽',
+                    origin_price : 5000,
+                    price : 5000,
+                    unit : '¥',
+                    description : '海景跟夜景都很漂亮的滑雪場',
+                    content : '纜車的上下速度很慢, 不用擔心下纜車跌倒。有漂亮的林間滑道, 天氣變化很快, 手機剛準備好要拍照就下大雪了。白天邊滑雪邊看海, 晚上邊滑雪邊看海港夜景, 心情很好。免費置物櫃在二樓。',
+                    is_enabled : 1,
+                    imageUrl : 'https://storage.googleapis.com/vue-course-api.appspot.com/peijinhexhw/1769240401783.jpg',
+                    imagesUrl : [
+                        'https://storage.googleapis.com/vue-course-api.appspot.com/peijinhexhw/1769240627827.jpg',
+                        'https://storage.googleapis.com/vue-course-api.appspot.com/peijinhexhw/1769240442763.jpg',
+                        'https://storage.googleapis.com/vue-course-api.appspot.com/peijinhexhw/1769240493343.jpg',
+                        'https://storage.googleapis.com/vue-course-api.appspot.com/peijinhexhw/1769240524642.jpg',
+                    ]
+            }
+        }
+            const Product = {
+                data: {
+                    title : '當麻滑雪場',
+                    category : '當麻',
+                    origin_price : 0,
+                    price : 0,
+                    unit : '¥',
+                    description : 'T-bar運輸的滑雪場',
+                    content : '聽到是免費且試合新手, 立馬改行程過去。 1/1、1/2沒有營業, 意外發現旁邊的散步道走3公里可以到雪場山頂, 我們穿著滑雪裝備, 單腳滑行。散步道像森林一樣非常漂亮, 散步道的小坡滑的很開心。',
+                    is_enabled : 1,
+                    imageUrl : 'https://storage.googleapis.com/vue-course-api.appspot.com/peijinhexhw/1769242390520.jpg',
+                    imagesUrl : [
+                        'https://storage.googleapis.com/vue-course-api.appspot.com/peijinhexhw/1769242529532.jpg',
+                        'https://storage.googleapis.com/vue-course-api.appspot.com/peijinhexhw/1769242573536.jpg',
+                    ]
+            }
+        }
+        
+            // #6 新增一個產品
+            axios.post(`${url}/v2/api/${path}/admin/product`, Product)
+                .then((res) => {
+                    console.log(res);
+                })
+                .catch((error) => {
+                    console.log(error);
+                })
+        }
+
+        delProductBtn.addEventListener('click', removeProduct)
+        function removeProduct() {
+            // #7 刪除一個產品
+            // id=-OjYckV8sy2gPS1UPkl9
+            axios.delete(`${url}/v2/api/${path}/admin/product/-Ojj3xXQNrOvpsOK2PFl`)
+                .then((res) => {
+                    console.log(res);
+                })
+                .catch((error) => {
+                    console.log(error);
+                })
+        }
+
+
+        //檔案上傳
+        const fileInput = document.querySelector('#file');
+        fileInput.addEventListener('change', upload);
+        function upload() {
+            const token = document.cookie.replace(
+                /(?:(?:^|.*;\s*)hexToken\s*\=\s*([^;]*).*$)|^.*$/, "$1");
+            axios.defaults.headers.common['Authorization'] = token;
+            // #1 撰寫上傳的API事件
+            //console.dir(fileInput);
+            const file = fileInput.files[0];
+            //console.log(file);
+
+            const formData = new FormData();
+            formData.append('file-to-upload', file);
+
+            axios.post(`${url}/V2/api/${path}/admin/upload`, formData)
+                .then((res) => {
+                    console.log(res);
+                }).catch((err) => {
+                    console.log(err.response);
+                });
+        }
+    </script>
+
+
+
+</body>
+
+</html>

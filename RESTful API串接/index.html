@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.24.0/axios.min.js"></script>
+</head>
+<body>
+    <div>
+        <input type="email" id="email">
+        <input type="password" id="password">
+        <button type="button" id="login">登入</button>
+    </div>
+
+    <div>
+        <button type="button" id="check">確認是否登入</button>
+        <button type="button" id="getProducts">取得後台產品列表</button>
+    </div>
+
+    <script>
+        const url = 'https://ec-course-api.hexschool.io/v2';
+        const apiPath = 'peijinhexhw';
+
+        (async () => {
+            const res = await axios.get(`${url}/api/${apiPath}/products/all`)
+            //console.log(res);
+            const {products} = res.data
+            //console.log(products);
+            try {
+                console.log(products);
+            }catch (error) {
+                console.log(error);
+            }
+        })()
+
+        const emailInput = document.querySelector('#email');
+        const pwInput = document.querySelector('#password');
+        const loginBtn = document.querySelector('#login');
+        const checkBtn = document.querySelector('#check');
+        const getProductsBtn = document.querySelector('#getProducts');
+
+        loginBtn.addEventListener('click', login)
+        async function login() {
+            //取得input框的資料
+            const email = emailInput.value;
+            const pw = pwInput.value;
+            //組成API文件的格式
+            const data = {
+                username: email,
+                password: pw
+            }
+            //發送API至遠端並登入 (並儲存Token)
+            const res = await axios.post(`${url}/admin/signin`, data)
+            //console.log(res);
+            try {
+                //console.log(res);
+
+                //取得token
+                const { token, expired } = res.data;
+                console.log(token, expired);
+
+                //儲存Token到cookie
+                document.cookie = `hexToken=${token}; expired=${new Date(expired)};`;
+                console.log(expired);
+                
+            }catch (error) {
+                console.log(error);
+            }
+        }
+
+        //確認有沒正確登入
+        checkBtn.addEventListener('click', checkLogin)
+        async function checkLogin() {
+            //取得token
+            const token = document.cookie.replace(
+                /(?:(?:^|.*;\s*)hexToken\s*\=\s*([^;]*).*$)|^.*$/,"$1");
+            //console.log(token);
+            
+            // 取得Token後放到header, 跟data或其他內容一起發送請求
+            axios.defaults.headers.common['Authorization'] = token; 
+
+            const res = await axios.post(`${url}/api/user/check`)
+            try {
+                console.log(res);
+            }catch (error) {
+                console.log(error);
+            }
+        }
+
+        //取得產品資料
+        getProductsBtn.addEventListener('click', getProducts)
+        async function getProducts() {
+            //取得token
+            const token = document.cookie.replace(
+                /(?:(?:^|.*;\s*)hexToken\s*\=\s*([^;]*).*$)|^.*$/,"$1");
+            //console.log(token);
+            
+            // 取得Token後放到header, 跟data或其他內容一起發送請求
+            axios.defaults.headers.common['Authorization'] = token;
+
+            const res = await axios.get(`${url}/api/${apiPath}/admin/products/all`)
+            try {
+                console.log(res);
+            }catch (error) {
+                console.log(error);
+            }
+        }
+
+    </script>
+</body>
+</html>

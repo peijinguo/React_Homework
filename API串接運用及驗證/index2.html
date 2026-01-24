@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.24.0/axios.min.js"></script>
+</head>
+
+<body>
+    <div>
+        <input type="file" class="form-control" id="file" placeholder="請輸入圖片連結" />
+    </div>
+
+    <script>
+        const url = 'https://ec-course-api.hexschool.io/';
+        const path = 'peijinhexhw';
+
+        const fileInput = document.querySelector('#file');
+        fileInput.addEventListener('change', upload);
+
+        function upload() {
+            const token = document.cookie.replace(
+                /(?:(?:^|.*;\s*)hexToken\s*\=\s*([^;]*).*$)|^.*$/, "$1");
+                
+            axios.defaults.headers.common['Authorization'] = token;
+            // #1 撰寫上傳的API事件
+            //console.dir(fileInput);
+            const file = fileInput.files[0];
+            //console.log(file);
+
+            const formData = new FormData();
+            formData.append('file-to-upload', file);
+
+            axios.post(`${url}/V2/api/${path}/admin/upload`, formData)
+                .then((res) => {
+                    console.log(res);
+                }).catch((err) => {
+                    console.log(err.response);
+                });
+        }
+    </script>
+
+
+
+
+</body>
+
+</html>
